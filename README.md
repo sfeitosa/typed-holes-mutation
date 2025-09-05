@@ -1,90 +1,89 @@
-# Gerador de Programas Java Aleatórios com Placeholders
+# Leveraging Typed-holes and Random Code Generation for Test Case Mutation
 
-Este projeto tem como objetivo gerar programas Java automaticamente a partir de esqueletos contendo **placeholders** de tipo. O sistema realiza a substituição desses placeholders por valores aleatórios válidos, compila os arquivos gerados, e executa-os para validar se o programa resultante é funcional.
+This paper explores the use of typed holes to mutate incomplete programs or test cases using random code generation in a type-directed manner in a way that can be useful for applying them to unit- or property-based tests. More precisely, the process follows a structured pipeline: First, missing segments of the source code are annotated with their expected types. Next, the system parses the annotated code to identify the typed-holes and extract the surrounding context. Finally, a randomized expression generator synthesizes and inserts candidate expressions to fill each typed-hole. Our evaluation involved mutating 10 base programs, producing 1,000 mutations per program. Every generated variant passed compilation and execution checks on three distinct Java compiler versions.
 
 ---
 
-## 📁 Estrutura do Projeto
-
+## 📁 Project Structure
 ```
 .
 ├── src/
 │   ├── main/
 │   │   └── java/
-│   │       ├── br/edu/ifsc/javarg/         # Contém a MainClass com placeholders
-│   │       └── br/edu/ifsc/javargexamples/ # Classes auxiliares usadas como exemplos
+│   │       ├── br/edu/ifsc/javarg/         # Contains the MainClass with placeholders
+│   │       └── br/edu/ifsc/javargexamples/ # Aux. Classes used as exemples
 │   └── test/
 │       └── java/
-│           └── br/edu/ifsc/javarg/         # MainTest com métodos de substituição e teste
-├── TestesGerados/                          # Programas Java gerados automaticamente
-│   └── br/edu/ifsc/javarg/                 # .class resultantes das compilações
+│           └── br/edu/ifsc/javarg/         # MainTest with methods to replace and test
+├── TestesGerados/                          
+│   └── br/edu/ifsc/javarg/                 # Resulting .class 
 └── README.md
 ```
 
 ---
 
-## 🧱 Como funcionam os esqueletos
+## 🧱 How Code Skeletons Work
 
-O ponto de partida são **esqueletos de código Java** que contêm **placeholders com tipagem explícita**, por exemplo:
+The starting point is Java code skeletons that contain explicitly typed placeholders, for example:
 
 ```java
-int x = __int__valorX;
-boolean cond = __boolean__condicao;
+int x = __int__valX;
+boolean cond = __boolean__cond;
 A a = new A(__int__a1, __boolean__a2);
 ```
 
-Estes placeholders têm o formato `__Tipo__nome`, onde:
+These placeholders follow the format `__Tipo__nome`, where:
 
-- `Tipo` é o tipo da variável (`int`, `double`, `boolean`, ou uma classe)
-- `nome` é um identificador para que o mesmo valor seja reutilizado se necessário
+- `Type` is the variable type (`int`, `double`, `boolean`, or a class)
+- `name` is an identifier so the same value can be reused if needed
 
 ---
 
-## ⚙️ Classe MainTest
+## ⚙️ MainTest Class
 
-A classe `MainTest` contém os métodos principais do pipeline de geração:
+The `MainTest` class contains the main methods of the generation pipeline:
 
-### 🔄 Substituição de Placeholders
+### 🔄 Placeholder Replacement
 
 - `processPlaceholders(String path)`  
-  Carrega um esqueleto `.java`, identifica todos os placeholders e os substitui por valores válidos.
+  Loads a `.java` skeleton, identifies all placeholders, and replaces them with valid values.
 
-- `generateExpressionForType(String tipo)`  
-  Gera uma expressão aleatória de acordo com o tipo (`int`, `boolean`, `double`, ou instâncias de classes importadas).
+- `generateExpressionForType(String type)`  
+  Generates a random expression according to the type (`int`, `boolean`, `double`, or instances of imported classes).
 
-### 📁 Salvamento e Organização
+### 📁 Saving and Organization
 
 - `saveGeneratedCode(CompilationUnit cu)`  
-  Salva o código resultante com o nome `MainClass_X.java`, onde X é incremental, dentro da pasta `TestesGerados`.
+  Saves the resulting code with the name `MainClass_X.java`, where X is incremental, within the `TestesGerados` folder.
 
-### 🔨 Compilação
+### 🔨 Compilation
 
 - `compileWithJavac(File file)`  
-  Utiliza o compilador do Amazon Corretto para compilar o arquivo `.java` gerado. Os arquivos `.class` resultantes são armazenados automaticamente na subpasta `TestesGerados/br/...`.
+  Uses the Amazon Corretto compiler to compile the generated `.java` file. The resulting `.class` files are automatically stored in the `TestesGerados/br/...` subfolder.
 
-### ▶️ Execução
+### ▶️ Execution
 
 - `runGeneratedClass(String fullyQualifiedName)`  
-  Executa o `.class` compilado utilizando `java` e a `classpath` correta, e retorna se a execução foi bem-sucedida.
+  Executes the compiled `.class` using `java` and the correct `classpath`, and returns whether the execution was successful.
 
-### 🔁 Teste em Lote
+### 🔁 Batch Testing
 
 - `TestCodeGenerationBatch(int n)`  
-  Gera, compila e executa `n` programas automaticamente, exibindo quantos foram bem-sucedidos.
+  Automatically generates, compiles, and executes `n` programs, displaying how many were successful.
 
 ---
 
-## ✅ Por que compilar e executar?
+## ✅ Why Compile and Execute?
 
-É essencial compilar e executar cada programa gerado porque:
+It is essential to compile and execute each generated program because:
 
-- **A compilação garante** que a substituição gerou código Java sintaticamente válido.
-- **A execução garante** que o programa não lança exceções em tempo de execução.
-- Isso permite validar a robustez do sistema de geração e a qualidade do código gerado automaticamente.
+- **Compilation ensures** that the substitution produced syntactically valid Java code.
+- **Execution ensures** that the program does not throw runtime exceptions.
+- This validates the robustness of the generation system and the quality of the automatically generated code.
 
 ---
 
-## 🧪 Exemplo de uso
+## 🧪 Example of Use
 
 ```java
 @Property(tries = 1)
@@ -95,7 +94,7 @@ public void TestCodeGenerationPipeline() throws Exception {
 }
 ```
 
-Para testes em massa:
+For batch testing:
 
 ```java
 @Property(tries = 1)
@@ -109,8 +108,8 @@ public void TestCodeGenerationBatch() throws Exception {
             else failure++;
         }
     }
-    System.out.println("Executados com sucesso: " + success);
-    System.out.println("Falhas na execução: " + failure);
+    System.out.println("Success execution: " + success);
+    System.out.println("Faling execution: " + failure);
 }
 ```
 
