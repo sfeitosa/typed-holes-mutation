@@ -115,7 +115,3 @@ public void TestCodeGenerationBatch() throws Exception {
 ```
 
 ---
-
-## 🧠 Considerações finais
-
-Atualmente, o sistema é mais eficiente com tipos primitivos e classes que usam apenas membros primitivos em seus construtores. O objetivo futuro é expandir a capacidade de geração e substituição para estruturas mais complexas e permitir maior variedade nos esqueletos.
